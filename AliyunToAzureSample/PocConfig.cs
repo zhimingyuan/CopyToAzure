@@ -13,6 +13,8 @@ namespace AliyunToAzureSample
             PocConfig.ListStep = PocConstant.ListStep;
             PocConfig.QueueCapacity = PocConstant.QueueCapacity;
             PocConfig.MaxFileNumber = PocConstant.MaxFileNumber;
+            PocConfig.SourceDir = string.Empty;
+            PocConfig.DestDir = string.Empty;
 
             foreach(string arg in args)
             {
@@ -42,13 +44,25 @@ namespace AliyunToAzureSample
             {
                 PocConfig.MaxFileNumber = int.Parse(value);
             }
-            else if (string.Equals(key, PocConstant.SourceBucketName, StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(key, PocConstant.SourceName, StringComparison.OrdinalIgnoreCase))
             {
-                PocConfig.SourceBucket = value;
+                string[] tokens = value.Split(new char[] { '/' }, 2);
+                PocConfig.SourceBucket = tokens[0];
+
+                if (tokens.Length == 2)
+                {
+                    PocConfig.SourceDir = tokens[1].TrimEnd('/');
+                }
             }
-            else if (string.Equals(key, PocConstant.DestContainerName, StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(key, PocConstant.DestName, StringComparison.OrdinalIgnoreCase))
             {
-                PocConfig.DestContainer = value;
+                string[] tokens = value.Split(new char[] { '/' }, 2);
+                PocConfig.DestContainer = tokens[0];
+
+                if (tokens.Length == 2)
+                {
+                    PocConfig.DestContainer = tokens[1].TrimEnd('/');
+                }
             }
             else if (string.Equals(key, PocConstant.PrefixName, StringComparison.OrdinalIgnoreCase))
             {
@@ -79,8 +93,20 @@ namespace AliyunToAzureSample
             get;
             private set;
         }
+        
+        public static string SourceDir
+        {
+            get;
+            private set;
+        }
 
         public static string DestContainer
+        {
+            get;
+            private set;
+        }
+
+        public static string DestDir
         {
             get;
             private set;

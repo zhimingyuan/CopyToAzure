@@ -115,12 +115,11 @@
 
                 countdownEvent.AddCount();
 
-                CloudBlockBlob cloudBlob = container.GetBlockBlobReference(job.Name);
+                CloudBlockBlob cloudBlob = container.GetBlockBlobReference(PocUtil.GetFullName(job.Name, PocConfig.DestDir));
 
                 Console.WriteLine("Start to transfer {0} to azure.", job.Name);
 
                 Task task = null;
-                bool destExist = false;
 
                 try
                 {
@@ -129,7 +128,7 @@
                     context.OverwriteCallback = (source, dest) =>
                     {
                         Console.WriteLine("Dest already exist {0}", dest);
-                        destExist = true;
+                        pocManifest.AddFailed(job.Name, PocErrorString.DestAlreadyExist);
                         return false;
                     };
 
@@ -148,14 +147,11 @@
                     {
                         if (t.IsFaulted)
                         {
-                            if (!destExist)
+                            if (t.Exception == null || t.Exception.InnerException == null || !(t.Exception.InnerException is TransferException) ||
+                                (t.Exception.InnerException as TransferException).ErrorCode != TransferErrorCode.NotOverwriteExistingDestination)
                             {
                                 pocManifest.AddFailed(job.Name, PocErrorString.UploadFailed);
                                 Console.Error.WriteLine("Error occurs when transferring {0}: {1}", job.Name, t.Exception.ToString());
-                            }
-                            else
-                            {
-                                pocManifest.AddFailed(job.Name, PocErrorString.DestAlreadyExist);    
                             }
                         }
                         else
@@ -204,6 +200,8 @@
                 string tempFile = Path.Combine(tempFolder, Guid.NewGuid().ToString());
                 string md5;
                 string sha256;
+                string relativeName = PocUtil.GetRelativeName(ossObject.Key, PocConfig.SourceDir);
+
                 try
                 {
                     PocUtil.DownloadOssObject2File(ossObject, tempFile, out md5, out sha256);
@@ -211,21 +209,21 @@
                 catch(Exception e)
                 {
                     Console.Error.WriteLine("Fail to download from aliyun {0}. Error: {1}", objectSummary.Key, e.ToString());
-                    pocManifest.AddFailed(objectSummary.Key, PocErrorString.DownloadFailed);
+                    pocManifest.AddFailed(relativeName, PocErrorString.DownloadFailed);
                     return null;
                 }
 
-                if (!VerifyDownloadSHA(objectSummary.Key, sha256))
+                if (!VerifyDownloadSHA(relativeName, sha256))
                 {
                     Console.Error.WriteLine("Download content miss match {0}. SHA: {1}", objectSummary.Key, sha256);
-                    pocManifest.AddFailed(objectSummary.Key, PocErrorString.DownloadContentMissMatch);
+                    pocManifest.AddFailed(relativeName, PocErrorString.DownloadContentMissMatch);
                     return null;
                 }
 
                 AliyunToAzureTransferJob job = new AliyunToAzureTransferJob()
                 {
                     Source = tempFile,
-                    Name = ossObject.Key,
+                    Name = relativeName,
                     ContentMD5 = md5,
                 };
 
@@ -242,11 +240,13 @@
             {
                 markerJournal.Update(marker);
 
+                string actualPrefix = String.IsNullOrEmpty(PocConfig.SourceDir) ? PocConfig.Prefix : PocConfig.SourceDir + "/" + PocConfig.Prefix;
+
                 ListObjectsRequest listObjectsReq = new ListObjectsRequest(PocConfig.SourceBucket)
                 {
                     MaxKeys = PocConfig.ListStep,
                     Marker = marker,
-                    Prefix = PocConfig.Prefix,
+                    Prefix = actualPrefix,
                 };
 
                 ObjectListing listedObjects = ossClient.ListObjects(listObjectsReq);
@@ -282,8 +282,7 @@
 
         private static bool VerifyDownloadSHA(string name, string sha256)
         {
-            string sha256InName = name.Substring(PocConfig.SourceBucket.Length + 1);
-            return string.Equals(sha256InName, sha256);
+            return string.Equals(name, sha256);
         }
 
         /// <summary>

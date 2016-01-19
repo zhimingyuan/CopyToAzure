@@ -22,8 +22,8 @@ namespace AliyunToAzureSample
         public const string ListStepName = "liststep";
         public const string QueueCapacityName = "queuecapacity";
         public const string MaxFileNumberName = "maxfilenumber";
-        public const string SourceBucketName = "source";
-        public const string DestContainerName = "dest";
+        public const string SourceName = "source";
+        public const string DestName = "dest";
         public const string PrefixName = "prefix";
 
         public const string MarkerFileName = "Marker.bin";

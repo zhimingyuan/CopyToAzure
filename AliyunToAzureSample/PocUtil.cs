@@ -34,5 +34,27 @@ namespace AliyunToAzureSample
                 sha256 = BitConverter.ToString(sha256Hash.Hash).Replace("-", string.Empty).ToLower();
             }
         }
+
+        public static string GetRelativeName(string fullName, string dir)
+        {
+            string result = fullName;
+            if (!string.IsNullOrEmpty(dir))
+            {
+                result = fullName.Substring(dir.Length);
+            }
+
+            return result.TrimStart('/');
+        }
+
+        public static string GetFullName(string partialName, string dir)
+        {
+            string result = partialName;
+            if (!string.IsNullOrEmpty(dir))
+            {
+                result = dir + "/" + partialName;
+            }
+
+            return partialName;
+        }
     }
 }
