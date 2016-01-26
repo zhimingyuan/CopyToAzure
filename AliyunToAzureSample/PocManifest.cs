@@ -18,8 +18,8 @@ namespace AliyunToAzureSample
         public PocManifest()
         {
             string timeStamp = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
-            this.transferredWriter = new StreamWriter(timeStamp + TransferredFileName);
-            this.failedWriter = new StreamWriter(timeStamp + FailedFileName);
+            this.transferredWriter = new StreamWriter(TransferredFileName + "_" + timeStamp + ".log");
+            this.failedWriter = new StreamWriter(FailedFileName + "_" + timeStamp + ".log");
         }
         
         public void AddTransferred(string fileName)
