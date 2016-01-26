@@ -260,7 +260,8 @@
                     
                     if (++listedCount > PocConfig.MaxFileNumber)
                     {
-                        goto Finish;
+                        // TO-DO: Temporarily disable this logic
+                        // goto Finish;
                     }
 
                     if (job == null)
