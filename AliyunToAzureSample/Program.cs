@@ -165,6 +165,17 @@
                             else
                             {
                                 pocManifest.AddTransferred(job.Name);
+                                
+                                // TO-DO, delete successfully transfered temp file
+                                if (File.Exists(job.Source))
+                                {
+                                    FileInfo fi = new FileInfo(job.Source);
+                                    if (fi.Attributes.ToString().IndexOf("ReadOnly") != -1)
+                                    {
+                                        fi.Attributes = FileAttributes.Normal;
+                                    }
+                                    File.Delete(job.Source);
+                                }
                             }
 
                             Console.WriteLine("Source md5: {0}, Destination md5: {1}. Succeed to transfer data to blob {2}", job.ContentMD5, cloudBlob.Properties.ContentMD5, job.Name);
@@ -260,7 +271,7 @@
                     
                     if (++listedCount > PocConfig.MaxFileNumber)
                     {
-                        goto Finish;
+                        // goto Finish;
                     }
 
                     if (job == null)
