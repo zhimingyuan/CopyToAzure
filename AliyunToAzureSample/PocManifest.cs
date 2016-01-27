@@ -35,7 +35,7 @@ namespace AliyunToAzureSample
         {
             lock (this.failedWriter)
             {
-                this.failedWriter.WriteLine(string.Format("{0}${1}", fileName, errorString));
+                this.failedWriter.WriteLine(string.Format("{0}\t{1}", fileName, errorString));
                 this.failedWriter.Flush();
             }
         }
